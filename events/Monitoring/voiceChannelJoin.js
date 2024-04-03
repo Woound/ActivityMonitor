@@ -1,25 +1,19 @@
 const {EmbedBuilder} = require('discord.js')
-
-const trackerMap = new Map();
+const User = require('../../src/db/userSchema.js')
 
 module.exports = async (oldMember, newMember) => {
 
     // Checking if the user left a channel.
     if (!newMember.channelId) {
-        const leaveTime = new Date();
         const userId = newMember.id;
-        const userData = trackerMap.get(userId);
-        if (userData) {
-            const joinTime = userData.joinedTime;
-            const duration = leaveTime - joinTime;
-            console.log(`User ${userId} spent ${duration} milliseconds in the voice channel.`);
-            // Optionally, convert milliseconds to a human-readable format
-            // const durationStr = millisecondsToDurationString(duration);
-            // console.log(`User ${userId} spent ${durationStr} in the voice channel.`);
-            trackerMap.delete(userId); // Remove user data from the map
-        }
+        // Check if the user already exists in the database
+        let userRecord = await User.findOne({userId})
+        userRecord.vcJoinTime = null;
+        await userRecord.save()
         return;
-    }
+    }; 
+
+    const categoryToCheck = 'testing vcs'
 
     // // Checking if the user switched channel.
     // if (oldMember.channelId && newMember.channelId) {
@@ -33,12 +27,29 @@ module.exports = async (oldMember, newMember) => {
         // console.log(voiceChannel);
 
         // Constraining the check to one specific category.
-        if (voiceChannel.parent && voiceChannel.parent.name.toLowerCase() === 'testing vcs') {
-            const userName = newMember.member.displayName;
+        if (voiceChannel.parent && voiceChannel.parent.name.toLowerCase() === categoryToCheck) {
 
-            trackerMap.set(newMember.id, {'joinedTime': new Date()})
-            
-            console.log(`${userName} joined a voice channel in the specific category.`);
+            const userId = newMember.id;
+
+            // Check if the user already exists in the database
+            let userRecord = await User.findOne({userId})
+
+            if (!userRecord) {
+                // If the user doesn't have a record, we create a new one.
+                userRecord = new User({
+                    userId,
+                    username: newMember.member.displayName,
+                    vcJoinTime: new Date(),
+                })
+            } else {
+                // If the user has an existing record, update that.
+                userRecord.vcJoinTime = new Date(); 
+            }
+
+            // Save record to database
+            await userRecord.save();
+
+            console.log(`${userRecord.username} joined a voice channel in the specific category.`);
         }
     }
 };

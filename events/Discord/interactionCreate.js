@@ -21,7 +21,7 @@ module.exports = async (client, interaction) => {
     // The code below  handles these interaction events specifically for message components.
 
     if (interaction.type === InteractionType.MessageComponent) {
-        const customId = JSON.parse(inter.customId);
+        const customId = JSON.parse(interaction.customId);
         const file_of_button = customId.ffb;
 
         if (file_of_button) {

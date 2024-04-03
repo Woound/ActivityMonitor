@@ -1,4 +1,5 @@
 const {Client, GatewayIntentBits} = require('discord.js')
+const {connectToDatabase} = require('./src/db/connection.js')
 const dotenv = require('dotenv')
 dotenv.config()
 
@@ -14,5 +15,8 @@ global.client = new Client({
 })
 
 require('./src/loader')
+
+connectToDatabase();
+
 
 client.login(process.env.BOT_TOKEN)

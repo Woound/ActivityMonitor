@@ -66,6 +66,8 @@ readdirSync('./commands/').forEach(dirs => {
     }
 });
 
+
+
 // Event handler for when the client is ready
 client.on('ready', (client) => {
     // Set the application commands (slash commands) using CommandsArray
