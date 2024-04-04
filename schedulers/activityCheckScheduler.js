@@ -1,7 +1,11 @@
 const { EmbedBuilder, ButtonBuilder, ButtonStyle, ActionRowBuilder } = require('discord.js');
 const schedule = require('node-schedule');
 const User = require('../src/db/userSchema');
-const channelId = '1224989761417121802';
+
+const channelId = '1224989761417121802'; // Id of the channel to send the reminder embed in.
+const confirmationTimeInterval = 5 * 60 * 1000; // The amount of time of staying in VC after which the reminder embed should be sent.
+const schedulerInterval = '*/5 * * * *'; // After how long the scheduler should be run.
+const disconnectingUserTime = 1 * 60 * 1000; // Time limit after which the confirmation is checked (ms) -> if not confirmed after this time, then disconnect.
 
 const sendActivityCheckEmbed = async (user) => {
     try {
@@ -24,7 +28,7 @@ const sendActivityCheckEmbed = async (user) => {
         // Set timeout to disconnect user if not confirmed
         setTimeout(async () => {
             await disconnectUser(user, channel);
-        }, 1 * 60 * 1000); // 5 minutes in milliseconds
+        }, disconnectingUserTime); // 5 minutes in milliseconds
     } catch (error) {
         console.error('Error sending activity check embed:', error);
     }
@@ -36,7 +40,6 @@ const disconnectUser = async (user, channel) => {
         const userToConfirm = await User.findOne({ userId });
 
         if (userToConfirm.lastCheckConfirmed) {
-            userToConfirm.vcJoinTime = new Date();
             userToConfirm.lastCheckConfirmed = false;
             await userToConfirm.save();
             console.log('User has confirmed.');
@@ -53,10 +56,17 @@ const disconnectUser = async (user, channel) => {
 }
 
 const activityCheck = async () => {
+    console.log('Checked time');
     try {
+        const currentTime = new Date();
+        console.log(currentTime);
+        const comparisonDate = new Date(currentTime.getTime() - confirmationTimeInterval);
+        console.log(comparisonDate);
+
+        // Find users who need to confirm their activity and where 3 hours have passed since they joined the voice channel
         const usersInVCs = await User.find({ 
-            vcJoinTime: { $ne: null },
-            lastCheckConfirmed: false 
+            lastCheckConfirmed: false,
+            vcJoinTime: { $lte: comparisonDate } // Check if 3 minutes have passed
         });
 
         for (const user of usersInVCs) {
@@ -67,6 +77,6 @@ const activityCheck = async () => {
     }
 }
 
-const activityCheckScheduler = () => schedule.scheduleJob('*/2 * * * *', activityCheck);
+const activityCheckScheduler = () => schedule.scheduleJob(schedulerInterval, activityCheck);
 
 module.exports = { activityCheckScheduler };

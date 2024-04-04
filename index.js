@@ -14,6 +14,8 @@ global.client = new Client({
     disableMentions: 'everyone'
 })
 
+client.config = require('./config');
+
 require('./src/loader')
 
 connectToDatabase();

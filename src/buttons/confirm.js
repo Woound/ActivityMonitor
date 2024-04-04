@@ -1,6 +1,19 @@
 const { ButtonStyle, ButtonBuilder, ActionRowBuilder } = require('discord.js');
 const User = require('../db/userSchema.js')
 
+// Function to round up a date object to the nearest 5-minute interval
+const roundUpToNearest5Minutes = (date) => {
+    const roundedDate = new Date(date);
+    const minutes = roundedDate.getMinutes();
+    const roundedMinutes = Math.ceil(minutes / 5) * 5;
+    roundedDate.setMinutes(roundedMinutes);
+    roundedDate.setSeconds(0);
+    roundedDate.setMilliseconds(0);
+    return roundedDate;
+};
+
+
+
 // Function to check if the interaction user's ID matches the ID of the intended recipient
 const validateRecipient = (interaction) => {
     const description = interaction.message.embeds[0].description;
@@ -22,8 +35,8 @@ const handleButtonInteraction = async ({ client, interaction }) => {
         const sentTime = interaction.message.createdTimestamp;
         const timeDifference = now - sentTime;
 
-        // Edit this value (in ms) to change the time available for the user to be able to confirm.
-        const timeLimit = 40000;
+        // Edit this value (in ms) to change the time available for the user to be able to confirm. (Make sure it matches the setTimeout in the scheduler)
+        const timeLimit = 1 * 60 * 1000;
 
         // Check if the interaction user is the intended recipient
         if (!validateRecipient(interaction)) {
@@ -49,6 +62,8 @@ const handleButtonInteraction = async ({ client, interaction }) => {
         const userId = interaction.user.id;
         const userConfirmed = await User.findOne({userId})
 
+        // / Signalling that the user confirmed, so their "join time" is reset at the time of them confirming, and not x minutes later when the setTimeout ends.
+        userConfirmed.vcJoinTime = roundUpToNearest5Minutes(new Date()); 
         userConfirmed.lastCheckConfirmed = true;
         await userConfirmed.save();
 

@@ -1,6 +1,19 @@
 const {EmbedBuilder} = require('discord.js')
 const User = require('../../src/db/userSchema.js')
 
+// Function to round up a date object to the nearest 5-minute interval
+const roundUpToNearest5Minutes = (date) => {
+    const roundedDate = new Date(date);
+    const minutes = roundedDate.getMinutes();
+    const roundedMinutes = Math.ceil(minutes / 5) * 5;
+    roundedDate.setMinutes(roundedMinutes);
+    roundedDate.setSeconds(0);
+    roundedDate.setMilliseconds(0);
+    return roundedDate;
+};
+
+
+
 module.exports = async (oldMember, newMember) => {
 
     // Checking if the user left a channel.
@@ -35,6 +48,9 @@ module.exports = async (oldMember, newMember) => {
             // Check if the user already exists in the database
             let userRecord = await User.findOne({userId})
 
+                        // Round down the current time to the nearest minute
+                        const vcJoinTime = roundUpToNearest5Minutes(new Date());
+
             if (!userRecord) {
                 // If the user doesn't have a record, we create a new one.
                 userRecord = new User({
@@ -45,7 +61,7 @@ module.exports = async (oldMember, newMember) => {
                 })
             } else {
                 // If the user has an existing record, update that.
-                userRecord.vcJoinTime = new Date(); 
+                userRecord.vcJoinTime = roundUpToNearest5Minutes(new Date()); 
             }
 
             // Save record to database
