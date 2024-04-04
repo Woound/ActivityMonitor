@@ -9,25 +9,27 @@ const sendActivityCheckEmbed = async (user) => {
 
     // Fetch the user's Discord user object
     const discordUser = await client.users.fetch(user.userId);
-    console.log(discordUser);
+    // console.log(discordUser);
 
     const activityCheckEmbed = new EmbedBuilder()
-        .setTitle(`${discordUser.globalName}'s Activity Check`)
-        .setColor('#0099ff')
-        .setDescription(`<@${discordUser.id}> ! You've been hitting the books for more than 3 hours now 👀\n\n Please click the button below to confirm you are still with us!`)
-        .setFooter({ text: 'Anti-studytime farming check' })
+        .setTitle(`🕵️‍♂️ ${discordUser.globalName}'s Activity Check 🕵️‍♂️`)
+        .setColor('#2abf81')
+        .setDescription(`<@${discordUser.id}> ! You've been hitting the books for more than **3 hours** now 👀\n\nPlease click the button below within \`5 minutes\` to confirm you are still with us!`)
+        .setFooter({ text: 'Keeping study sessions honest and productive.' }).setTimestamp()
         // Set the user's profile picture as thumbnail
         .setThumbnail(discordUser.avatarURL());
 
     const channel = await client.channels.cache.get(channelId);
     await channel.send({ embeds: [activityCheckEmbed], components: [buttonRow] });
 
+    console.log(user);
+
 }
 
 const activityCheck = async () => {
     try {
         const usersInVCs = await User.find({ vcJoinTime: { $ne: null } });
-        console.log(usersInVCs);
+        // console.log(usersInVCs);
 
         for (const user of usersInVCs) {
             // Send the activity check embed to the voice channel
@@ -38,6 +40,6 @@ const activityCheck = async () => {
     }
 }
 
-const activityCheckScheduler = () => schedule.scheduleJob('* * * * *', activityCheck);
+const activityCheckScheduler = () => schedule.scheduleJob('*/2 * * * *', activityCheck);
 
 module.exports = { activityCheckScheduler };

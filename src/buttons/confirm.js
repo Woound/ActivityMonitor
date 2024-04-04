@@ -1,33 +1,56 @@
-const {ButtonStyle, ButtonBuilder, ActionRowBuilder} = require('discord.js')
-// Button handler logic
-module.exports = async ({ client, interaction, customId }) => {
+const { ButtonStyle, ButtonBuilder, ActionRowBuilder } = require('discord.js');
+
+// Function to check if the interaction user's ID matches the ID of the intended recipient
+const validateRecipient = (interaction) => {
+    const description = interaction.message.embeds[0].description;
+    const userIdRegex = /<@(\d+)>/;
+    const match = description.match(userIdRegex);
+
+    if (!match || match.length < 2) {
+        return false; // Unable to determine the intended recipient
+    }
+
+    const intendedUserId = match[1];
+    return interaction.user.id === intendedUserId;
+};
+
+// Function to handle button interaction
+const handleButtonInteraction = async ({ client, interaction }) => {
     try {
         const now = Date.now();
-        const sentTime = interaction.message.createdTimestamp; // Retrieve the time when the embed was sent
-
-        // Calculate the time difference in milliseconds
+        const sentTime = interaction.message.createdTimestamp;
         const timeDifference = now - sentTime;
-        const timeLimit = 40000; 
 
-        const buttonComponent = interaction.message.components[0].components[0];
-        console.log(buttonComponent);
+        // Edit this value (in ms) to change the time available for the user to be able to confirm.
+        const timeLimit = 40000;
 
-        // The reason it wasnt working was that we weredirectly trying to edit the button component.
-        // What we actually had to do was create an entirelynew buttonRow and assign that to the components.
-        const confirmButton = new ButtonBuilder().setLabel('Confirm').setStyle(ButtonStyle.Danger).setDisabled(true).setCustomId(JSON.stringify({ffb: 'confirm'}));
+        // Check if the interaction user is the intended recipient
+        if (!validateRecipient(interaction)) {
+            return interaction.editReply({ content: '❌ | Only the intended recipient can confirm activity.', ephemeral: true });
+        }
+
+        // Create the confirmButton with initial disabled state
+        const confirmButton = new ButtonBuilder()
+            .setLabel('Confirm')
+            .setStyle(ButtonStyle.Success)
+            .setDisabled(true)
+            .setCustomId(JSON.stringify({ ffb: 'confirm' }));
+
         const buttonRow = new ActionRowBuilder().addComponents(confirmButton);
 
+        // If the time limit has exceeded, handle the interaction accordingly
         if (timeDifference > timeLimit) {
-            // If the time limit has exceeded, handle the interaction accordingly
+            await interaction.message.edit({ components: [buttonRow] });
             return interaction.editReply({ content: '❌ | Time limit exceeded for confirming activity.', ephemeral: true });
         }
 
-        await interaction.message.edit({ components: [buttonRow] }); // Update the message
 
-        // If within the time limit, continue with the confirmation logic
+        await interaction.message.edit({ components: [buttonRow] });
         return interaction.editReply({ content: '✅ | Thank you for confirming!', ephemeral: true });
     } catch (error) {
         console.error('Error handling button interaction:', error);
         return interaction.editReply({ content: '❌ | An error occurred while processing your confirmation.', ephemeral: true });
     }
-}
+};
+
+module.exports = handleButtonInteraction;
