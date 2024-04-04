@@ -9,6 +9,7 @@ module.exports = async (oldMember, newMember) => {
         // Check if the user already exists in the database
         let userRecord = await User.findOne({userId})
         userRecord.vcJoinTime = null;
+        userRecord.lastCheckConfirmed = false;
         await userRecord.save()
         return;
     }; 
@@ -40,6 +41,7 @@ module.exports = async (oldMember, newMember) => {
                     userId,
                     username: newMember.member.displayName,
                     vcJoinTime: new Date(),
+                    lastCheckConfirmed: false,
                 })
             } else {
                 // If the user has an existing record, update that.

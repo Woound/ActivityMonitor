@@ -1,4 +1,5 @@
 const { ButtonStyle, ButtonBuilder, ActionRowBuilder } = require('discord.js');
+const User = require('../db/userSchema.js')
 
 // Function to check if the interaction user's ID matches the ID of the intended recipient
 const validateRecipient = (interaction) => {
@@ -44,6 +45,12 @@ const handleButtonInteraction = async ({ client, interaction }) => {
             return interaction.editReply({ content: '❌ | Time limit exceeded for confirming activity.', ephemeral: true });
         }
 
+        // If the user has confirmed, we go ahead and update the database field to show they have confirmed.
+        const userId = interaction.user.id;
+        const userConfirmed = await User.findOne({userId})
+
+        userConfirmed.lastCheckConfirmed = true;
+        await userConfirmed.save();
 
         await interaction.message.edit({ components: [buttonRow] });
         return interaction.editReply({ content: '✅ | Thank you for confirming!', ephemeral: true });
