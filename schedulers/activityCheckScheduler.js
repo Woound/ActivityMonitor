@@ -3,9 +3,10 @@ const schedule = require('node-schedule');
 const User = require('../src/db/userSchema');
 
 const channelId = '1224989761417121802'; // Id of the channel to send the reminder embed in.
-const confirmationTimeInterval = 5 * 60 * 1000; // The amount of time of staying in VC after which the reminder embed should be sent.
-const schedulerInterval = '*/5 * * * *'; // After how long the scheduler should be run.
+const confirmationTimeInterval = 1 * 60 * 1000; // The amount of time of staying in VC after which the reminder embed should be sent.
+const schedulerInterval = '*/2 * * * *'; // After how long the scheduler should be run.
 const disconnectingUserTime = 1 * 60 * 1000; // Time limit after which the confirmation is checked (ms) -> if not confirmed after this time, then disconnect.
+
 
 const sendActivityCheckEmbed = async (user) => {
     try {
@@ -18,7 +19,7 @@ const sendActivityCheckEmbed = async (user) => {
         const activityCheckEmbed = new EmbedBuilder()
             .setTitle(`🕵️‍♂️ ${discordUser.globalName}'s Activity Check 🕵️‍♂️`)
             .setColor('#2abf81')
-            .setDescription(`<@${discordUser.id}>! You've been hitting the books for more than **3 hours** now 👀\n\nPlease click the button below within \`5 minutes\` to confirm you are still with us!`)
+            .setDescription(`<@${discordUser.id}>! You've been hitting the books for more than **3 hours** now 👀\n\nPlease click the button below within \`10 minutes\` to confirm you are still with us!`)
             .setFooter({ text: 'Keeping study sessions honest and productive.' }).setTimestamp()
             .setThumbnail(discordUser.avatarURL());
 
